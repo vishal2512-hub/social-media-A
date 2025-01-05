@@ -10,24 +10,29 @@
     border-bottom: 1px solid themed("border");
     position: sticky;
     background-color: themed("bg");
-    color:themed("textColor");
-
+    color: themed("textColor");
+    border-bottom:1px solid themed("textColor");
     top: 0;
     z-index: 999;
-    
-    
+
+    .logo {
+      background-image: linear-gradient(to left,#833ab4,#fd1d1d,#fcb045);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      padding: 10px;
+}
+
     .left {
       display: flex;
       align-items: center;
       gap: 30px;
-      
+
       span {
         font-weight: bold;
         font-size: 20px;
         color: themed("logo");
-
       }
-      
+
       .search {
         display: flex;
         align-items: center;
@@ -36,33 +41,45 @@
         border-radius: 5px;
         padding: 5px;
         margin-left: 20px;
-        
+
         input {
           border: none;
           width: 450px;
           background-color: transparent;
           color: themed("textColor");
 
-          @include mobile{
+          @include mobile {
             display: none;
           }
         }
       }
     }
+
     .right {
       display: flex;
       align-items: center;
       gap: 20px;
 
-      @include mobile{
+      @include mobile {
         display: none;
       }
-        img{
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          object-fit: cover;
-        }
+
+      img {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
     }
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .navbar .left .search input {
+    display: none;
+  }
+
+  .navbar .right {
+    display: none;
   }
 }

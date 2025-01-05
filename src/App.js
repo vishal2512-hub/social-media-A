@@ -14,7 +14,8 @@ import {
   Outlet,
   RouterProvider,
 } from "react-router-dom";
-import { Authcontext } from "./Context/AuthContext";
+import { Authcontext, AuthcontextProvider } from "./Context/AuthContext";
+import Chat from "./component/Chatbox/Chat";
 
 function App() {
 
@@ -25,7 +26,9 @@ function App() {
   const Layout = () => {
     return (
       <div className={`theme-${darkMode ? "dark" :"light"}`}>
-        <Navbar/>
+        <AuthcontextProvider>
+          <Navbar/>
+        </AuthcontextProvider>
         <div style={{display:"flex"}}>
           <Leftbar/>
           <div style={{ flex: 6 }}>
@@ -60,7 +63,11 @@ function App() {
         {
           path:"/profile/:id",
           element:<Profile/>
-        }
+        },
+        {
+          path:"/chat",
+          element:<Chat/>
+        },
       ]
     },
     {

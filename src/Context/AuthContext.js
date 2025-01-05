@@ -5,7 +5,7 @@ export const Authcontext = createContext();
 
 export const AuthcontextProvider = ({ children }) => {
   const [currentUser, setcurrentUser] = useState(
-    JSON.parse(localStorage.getItem("darkMode")) || false
+    JSON.parse(localStorage.getItem("user")) || false
   );
 
   const login = () => {

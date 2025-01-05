@@ -3,8 +3,10 @@
 .stories {
     display: flex;
     gap: 10px;
+    width: 100%;
     height: 150px;
     margin-bottom: 30px;
+    padding: 0px 10px;
 
     @include mobile {
       height: 50px;
@@ -13,9 +15,10 @@
 
     .story {
       flex: 1;
-      border-radius: 10px;
+      border-radius: 20px;
       overflow: hidden;
       position: relative;
+     
       
       @include mobile {
         flex: none;
@@ -50,7 +53,7 @@
         font-weight: bold;
         font-size: 30px;
         display: flex;
-        justify-content: start;
+        justify-content: center;
 
         @include mobile {
             left: 0;
