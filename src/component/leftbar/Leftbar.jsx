@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import React from "react";
+import React, { useContext } from "react";
 import "./leftbar.scss";
 import "../../style.scss";
 import { Link } from "react-router-dom";
@@ -10,7 +10,11 @@ import NotificationsActiveOutlinedIcon from "@mui/icons-material/NotificationsAc
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined';
 import PlayCircleFilledOutlinedIcon from '@mui/icons-material/PlayCircleFilledOutlined';
+import { Authcontext } from "../../Context/AuthContext";
+
 const Leftbar = () => {
+  const { currentUser } = useContext(Authcontext);
+
   return (
     <div className="leftBar">
       <div className="container">
@@ -48,11 +52,15 @@ const Leftbar = () => {
             <span>Menu</span>
           </div>
           <div className="item">
-            <img
-              // src={"/upload/" .profilePic}
-              alt=""
-            />
-            <span>VISHAL</span>
+            {currentUser && (
+              <>
+                <img
+                  src={currentUser.profilepic}
+                  alt=""
+                />
+                <span>{currentUser.Name}</span>
+              </>
+            )}
           </div>
         </div>
       </div>
