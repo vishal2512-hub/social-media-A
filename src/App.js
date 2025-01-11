@@ -25,7 +25,7 @@ function App() {
   
   const Layout = () => {
     return (
-      <div className={`theme-${darkMode ? "light" :"light"}`}>
+      <div className={`theme-${darkMode ? "dark" :"light"}`}>
         <AuthcontextProvider>
           <Navbar/>
         </AuthcontextProvider>
@@ -43,7 +43,7 @@ function App() {
  
   const ProtectedRoute = ({children}) => {
     if (!currentUser) {
-      return <Navigate to="/"/>
+      return <Navigate to="/login"/>
     }
     return children;
   }
