@@ -1,6 +1,7 @@
 import express from "express";
 
 const app= express()
+
 import userRoutes from "./routes/users.js"
 import authRoutes from "./routes/auth.js"
 import commentRoute from './routes/comments.js'

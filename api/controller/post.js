@@ -3,25 +3,20 @@ import { db } from "../connect.js";
 import jwt from "jsonwebtoken";
 
 export const getPosts = async (req, res) => {
-  // Extract the token from cookies
   const token = req.cookies.accessToken;
   if (!token) return res.status(401).json("Not logged in!");
 
-  // Verify the token
   jwt.verify(token, "secretkey", async (err, userInfo) => {
     if (err) return res.status(403).json("Token is not valid!");
 
-    // Get the userId from the query string
     const userId = req.query.userId;
 
-    // SQL query to get posts
     const q = `SELECT p.*, u.id AS userId, name, profilePic FROM posts AS p 
                JOIN users AS u ON (u.id = p.userId)
                LEFT JOIN relationships AS r ON (p.userId = r.followedUserId) 
                WHERE (r.followerUserId = ? OR p.userId = ?) OR ? IS NULL
                ORDER BY p.createdAt DESC`;
 
-    // Define values for the query
     const values = userId ? [userId, userId, userId] : [null, null, null];
 
     try {
@@ -40,7 +35,6 @@ export const getPosts = async (req, res) => {
 
 
 export const addPost = (req, res) => {
-    // Correctly retrieve the token from cookies
     const token = req.cookies.accessToken;
     if (!token) return res.status(401).json("Not logged in!");
   

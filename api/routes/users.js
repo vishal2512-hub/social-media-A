@@ -4,8 +4,6 @@ import { getUser } from "../controller/user.js";
 
 const router = express.Router()
 
-router.get("/find/:userId",(req,res) => {
-    res.send("its is working")
-})
+router.get("/find/:userId",getUser)
 
 export default router;

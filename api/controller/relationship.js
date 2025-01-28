@@ -1,18 +1,17 @@
 import { db } from "../connect.js";
 import jwt from "jsonwebtoken";
-import moment from "moment"
 
-export const getLikes = (req, res) => {
-  const q =
-    "SELECT userId FROM likes WHERE postId =?";
+export const getRelationships = (req, res) => {
+  const q = "SELECT followerUserId FROM relationships WHERE followerUserId = ?";
 
-  db.query(q, [req.query.postid], (err, data) => {
+  db.query(q, [req.query.followerUserId], (err, data) => {
     if (err) return res.status(500).json(err);
-    return res.status(200).json(data.map((like) => like.userId));
+    return res.status(200).json(data.map((relationship) => relationship.followerUserId));
   });
 };
 
-export const addLike = (req, res) => {
+
+export const addRelationship = (req, res) => {
     const token = req.cookies.accessToken;
     if (!token) return res.status(401).json("Not logged in!");
   
@@ -30,7 +29,7 @@ export const addLike = (req, res) => {
 };
 
 
-  export const deleteLike = (req, res) => {
+  export const deleteRelationship = (req, res) => {
       const token = req.cookies.accessToken;
       if (!token) return res.status(401).json("Not logged in!");
     
