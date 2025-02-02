@@ -2,11 +2,13 @@ import express from "express";
 
 const app= express()
 
+
 import userRoutes from "./routes/users.js"
 import authRoutes from "./routes/auth.js"
 import commentRoute from './routes/comments.js'
 import postRoutes from './routes/posts.js'
 import likeRoute from './routes/likes.js'
+import relationshipRoute from './routes/relationship.js'
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import multer from "multer";
@@ -54,7 +56,7 @@ app.use("/api/auth",authRoutes)
 app.use("/api/comments",commentRoute)
 app.use("/api/posts",postRoutes)
 app.use("/api/likes",likeRoute)
-
+app.use("/api/relationships", relationshipRoute)
 
 app.listen(8801, () => {
     console.log("API working");

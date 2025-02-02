@@ -3,33 +3,32 @@ import { db } from "../connect.js";
 import jwt from "jsonwebtoken";
 
 export const getPosts = async (req, res) => {
+  const userId = req.query.userId;
   const token = req.cookies.accessToken;
   if (!token) return res.status(401).json("Not logged in!");
 
   jwt.verify(token, "secretkey", async (err, userInfo) => {
     if (err) return res.status(403).json("Token is not valid!");
 
-    const userId = req.query.userId;
+    const q = userId
+      ? `SELECT p.*, u.id AS userId, u.name, u.profilePic 
+         FROM posts AS p 
+         JOIN users AS u ON u.id = p.userId 
+         WHERE p.userId = ? 
+         ORDER BY p.createdAt DESC`
+      : `SELECT p.*, u.id AS userId, u.name, u.profilePic 
+         FROM posts AS p 
+         JOIN users AS u ON u.id = p.userId
+         LEFT JOIN relationships AS r ON p.userId = r.followedUserId 
+         WHERE (r.followerUserId = ? OR p.userId = ?) OR ? IS NULL
+         ORDER BY p.createdAt DESC`;
 
-    const q = `SELECT p.*, u.id AS userId, name, profilePic FROM posts AS p 
-               JOIN users AS u ON (u.id = p.userId)
-               LEFT JOIN relationships AS r ON (p.userId = r.followedUserId) 
-               WHERE (r.followerUserId = ? OR p.userId = ?) OR ? IS NULL
-               ORDER BY p.createdAt DESC`;
+    const values = userId ? [userId] : [userInfo.id, userInfo.id, userId];
 
-    const values = userId ? [userId, userId, userId] : [null, null, null];
-
-    try {
-      const data = await new Promise((resolve, reject) => {
-        db.query(q, values, (err, data) => {
-          if (err) reject(err);
-          resolve(data);
-        });
-      });
-      return res.status(200).json(data); // Return posts data
-    } catch (err) {
-      return res.status(500).json(err); // Handle errors
-    }
+    db.query(q, values, (err, data) => {
+      if (err) return res.status(500).json(err);
+      return res.status(200).json(data); // ✅ Returns posts data instead of a string
+    });
   });
 };
 

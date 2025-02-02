@@ -3,6 +3,6 @@ import { addComment, getComments } from "../controller/comment.js"; // Update th
 const router = express.Router()
 
 router.get("/",getComments)
-router.get("/",addComment)
+router.post("/",addComment)
 
 export default router;
