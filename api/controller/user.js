@@ -2,6 +2,8 @@ import { db } from "../connect.js";
 import jwt from "jsonwebtoken";
 
 export const getUser = (req, res) => {
+
+  console.log("inside find user")
   const userId = req.params.userId;
 
   const q = "SELECT * FROM users WHERE id=?"; 

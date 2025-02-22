@@ -12,7 +12,13 @@ import relationshipRoute from './routes/relationship.js'
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import multer from "multer";
+import notificationRoute from './routes/notification.js'
+import conversationsRoute from "./routes/conversation.js";
+import messagesRoute from "./routes/message.js";
 
+
+
+import storyRoutes from "./routes/stories.js"; // Correct Path
 
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Credentials", true);
@@ -27,19 +33,13 @@ app.use(cors({
 app.use(cookieParser());
 
 
-
-
-
-
-
-
 // multer middleware defined for image upload
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, '../client/social-media/public/upload');
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() +  file.originalname);
+    cb(null, file.originalname);
   },
 })
 
@@ -52,13 +52,16 @@ app.post("/api/upload", upload.single('file'), (req, res) => {
 
 console.log("i am in index page")
 app.use("/api/users",userRoutes)
+app.use("/api/notifications", notificationRoute)
 app.use("/api/auth",authRoutes)
 app.use("/api/comments",commentRoute)
 app.use("/api/posts",postRoutes)
 app.use("/api/likes",likeRoute)
 app.use("/api/relationships", relationshipRoute)
+app.use("/api/stories", storyRoutes);
+app.use("/api/conversation", conversationsRoute);
+app.use("/api/message", messagesRoute);
 
 app.listen(8801, () => {
     console.log("API working");
-    
 })

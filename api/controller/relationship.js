@@ -18,7 +18,7 @@ export const addRelationship = (req, res) => {
     jwt.verify(token, "secretkey", (err, userInfo) => {
       if (err) return res.status(403).json("Token is not valid!");
   
-      const q = "INSERT INTO relationship(`followerUserId`, `followedUserId`) VALUES (?, ?)";
+      const q = "INSERT INTO relationships (`followerUserId`, `followedUserId`) VALUES (?, ?)";
       
       db.query(q, [userInfo.id, req.body.userId], (err, data) => {
         if (err) return res.status(500).json(err);
