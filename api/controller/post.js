@@ -65,14 +65,16 @@ export const addPost = (req, res) => {
   jwt.verify(token, "secretkey", (err, userInfo) => {
     if (err) return res.status(403).json("Token is not valid!");
 
-    if (!req.body.desc && !req.body.img) {
-      return res.status(400).json("Post must contain either text or image");
+    // Check if post has content (text, image, or video)
+    if (!req.body.desc && !req.body.img && !req.body.video) {
+      return res.status(400).json("Post must contain text, image, or video");
     }
 
-    const q = "INSERT INTO posts(`desc`, `img`, `createdAt`, `userId`) VALUES (?, ?, ?, ?)";
+    const q = "INSERT INTO posts(`desc`, `img`, `video`, `createdAt`, `userId`) VALUES (?, ?, ?, ?, ?)";
     const values = [
-      req.body.desc || "",  // Allow empty description if there's an image
-      req.body.img || "",   // Allow empty image if there's description
+      req.body.desc || "",       // Allow empty description if there's media
+      req.body.img || "",        // Image URL or empty
+      req.body.video || "",      // Video URL or empty
       moment(Date.now()).format("YYYY-MM-DD HH:mm:ss"),
       userInfo.id,
     ];
@@ -88,14 +90,16 @@ export const addPost = (req, res) => {
         id: data.insertId,
         desc: values[0],
         img: values[1],
+        video: values[2],
         userId: userInfo.id,
-        createdAt: values[2],
+        createdAt: values[3],
         name: userInfo.name,
         profilePic: userInfo.profilePic
       });
     });
   });
 };
+
 export const deletePost = (req, res) => {
   const token = req.cookies.accessToken;
   if (!token) return res.status(401).json("Not logged in!");

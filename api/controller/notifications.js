@@ -2,6 +2,7 @@ import { db } from "../connect.js";
 import jwt from "jsonwebtoken";
 import moment from "moment";
 
+// GET Notifications
 export const getNotifications = (req, res) => {
   const token = req.cookies.accessToken;
   if (!token) return res.status(401).json("Not logged in!");
@@ -23,6 +24,7 @@ export const getNotifications = (req, res) => {
   });
 };
 
+// CREATE Notification
 export const createNotification = (req, res) => {
   const token = req.cookies.accessToken;
   if (!token) return res.status(401).json("Not logged in!");
@@ -30,26 +32,26 @@ export const createNotification = (req, res) => {
   jwt.verify(token, "secretkey", (err, userInfo) => {
     if (err) return res.status(403).json("Token is not valid!");
 
-    const q = "INSERT INTO notifications (`type`, `senderId`, `receiverId`, `postId`, `createdAt`) VALUES (?, ?, ?, ?, ?)";
-const values = [
-  req.body.type,
-  userInfo.id,
-  req.body.receiverId,
-  req.body.postId || null,
-  moment(Date.now()).format("YYYY-MM-DD HH:mm:ss"),
-];
+    const q = `INSERT INTO notifications (type, senderId, receiverId, postId, createdAt, isRead) 
+               VALUES (?, ?, ?, ?, ?, ?)`;
 
-db.query(q, values, (err, data) => {
-  if (err) {
-    console.error("Error creating notification:", err);
-    return res.status(500).json(err);
-  }
-  return res.status(200).json("Notification has been created.");
-});
+    const values = [
+      req.body.type,        
+      userInfo.id,           
+      req.body.receiverId,  
+      req.body.postId || null, 
+      moment(Date.now()).format("YYYY-MM-DD HH:mm:ss"), 
+      false,                 
+    ];
 
+    db.query(q, values, (err, data) => {
+      if (err) return res.status(500).json(err);
+      return res.status(200).json("Notification has been created.");
+    });
   });
 };
 
+// MARK Notifications as Read
 export const markAsRead = (req, res) => {
   const token = req.cookies.accessToken;
   if (!token) return res.status(401).json("Not logged in!");
@@ -58,7 +60,7 @@ export const markAsRead = (req, res) => {
     if (err) return res.status(403).json("Token is not valid!");
 
     const q = "UPDATE notifications SET isRead = true WHERE receiverId = ?";
-    
+
     db.query(q, [userInfo.id], (err, data) => {
       if (err) return res.status(500).json(err);
       return res.status(200).json("All notifications have been marked as read");

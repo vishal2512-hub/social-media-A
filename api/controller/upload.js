@@ -5,10 +5,14 @@ const FileUpload = ({ onUploadSuccess, onUploadError, fieldName }) => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [fileType, setFileType] = useState(null);
 
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
+
+    // Set file type for preview rendering
+    setFileType(file.type);
 
     // Show preview
     const reader = new FileReader();
@@ -30,7 +34,11 @@ const FileUpload = ({ onUploadSuccess, onUploadError, fieldName }) => {
       });
 
       if (response.data) {
-        onUploadSuccess(response.data);
+        // Pass file type along with the response data
+        onUploadSuccess({
+          ...response.data,
+          fileType: file.type
+        });
       } else {
         throw new Error('Upload failed - no filename received');
       }
@@ -50,12 +58,20 @@ const FileUpload = ({ onUploadSuccess, onUploadError, fieldName }) => {
         
         <div className="file-upload-preview">
           {preview && (
-            <div className="file-upload-preview-image">
-              <img
-                src={preview}
-                alt="Preview"
-                className="file-upload-preview-img"
-              />
+            <div className="file-upload-preview-media">
+              {fileType?.startsWith('image/') ? (
+                <img
+                  src={preview}
+                  alt="Preview"
+                  className="file-upload-preview-img"
+                />
+              ) : fileType?.startsWith('video/') ? (
+                <video
+                  src={preview}
+                  controls
+                  className="file-upload-preview-video"
+                />
+              ) : null}
             </div>
           )}
 
@@ -68,11 +84,11 @@ const FileUpload = ({ onUploadSuccess, onUploadError, fieldName }) => {
                     type="file"
                     className="file-upload-input-hidden"
                     onChange={handleFileChange}
-                    accept="image/*"
+                    accept="image/*,video/*"
                   />
                 </label>
               </div>
-              <p className="file-upload-instructions">PNG, JPG, GIF up to 10MB</p>
+              <p className="file-upload-instructions">PNG, JPG, GIF, MP4, WebM up to 10MB</p>
             </div>
           </div>
         </div>
