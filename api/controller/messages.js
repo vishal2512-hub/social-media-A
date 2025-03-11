@@ -4,7 +4,7 @@ import { db } from "../connect.js";
 // Get messages for a conversation
 export const getMessages = async (req, res) => {
   try {
-    const messages = await db.query(
+    const [messages] = await db.query(
       `SELECT m.*, u.username, u.profilePic 
        FROM messages m 
        JOIN users u ON m.sender_id = u.id
@@ -18,12 +18,10 @@ export const getMessages = async (req, res) => {
   }
 };
 
-// Send a message
 export const sendMessage = async (req, res) => {
   try {
     const { conversationId, senderId, text } = req.body;
 
-    // Insert message into the messages table
     await db.query(
       `INSERT INTO messages (conversation_id, sender_id, text, created_at) 
        VALUES (?, ?, ?, NOW())`,

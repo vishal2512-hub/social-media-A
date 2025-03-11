@@ -18,7 +18,10 @@ export const getNotifications = (req, res) => {
       ORDER BY n.createdAt DESC`;
 
     db.query(q, [userInfo.id], (err, data) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        console.error("Database Error:", err);
+        return res.status(500).json("Internal Server Error.");
+      }
       return res.status(200).json(data);
     });
   });
@@ -36,20 +39,24 @@ export const createNotification = (req, res) => {
                VALUES (?, ?, ?, ?, ?, ?)`;
 
     const values = [
-      req.body.type,        
-      userInfo.id,           
-      req.body.receiverId,  
-      req.body.postId || null, 
-      moment(Date.now()).format("YYYY-MM-DD HH:mm:ss"), 
-      false,                 
+      req.body.type,        // like
+      userInfo.id,          // senderId (jo like kar raha hai)
+      req.body.receiverId,  // receiverId (post owner)
+      req.body.postId || null,
+      moment().format("YYYY-MM-DD HH:mm:ss"),
+      false,  // isRead = false
     ];
 
     db.query(q, values, (err, data) => {
-      if (err) return res.status(500).json(err);
-      return res.status(200).json("Notification has been created.");
+      if (err) {
+        console.error("Notification Error:", err);
+        return res.status(500).json("Could not create notification.");
+      }
+      return res.status(200).json("Notification created.");
     });
   });
 };
+
 
 // MARK Notifications as Read
 export const markAsRead = (req, res) => {
@@ -59,11 +66,13 @@ export const markAsRead = (req, res) => {
   jwt.verify(token, "secretkey", (err, userInfo) => {
     if (err) return res.status(403).json("Token is not valid!");
 
-    const q = "UPDATE notifications SET isRead = true WHERE receiverId = ?";
-
-    db.query(q, [userInfo.id], (err, data) => {
-      if (err) return res.status(500).json(err);
-      return res.status(200).json("All notifications have been marked as read");
+    const q = "UPDATE notifications SET isRead = 1 WHERE receiverId = ?";
+    db.query(q, [userInfo.id], (err) => {
+      if (err) {
+        console.error("Mark as read error:", err);
+        return res.status(500).json("Could not mark notifications as read.");
+      }
+      return res.status(200).json("All notifications marked as read.");
     });
   });
 };

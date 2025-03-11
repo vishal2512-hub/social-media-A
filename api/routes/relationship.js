@@ -6,6 +6,6 @@ const router = express.Router()
 
 router.get("/",getRelationships)
 router.post("/",addRelationship)
-router.delete("/",deleteRelationship)
+router.delete("/unfollow",deleteRelationship)
 
 export default router;

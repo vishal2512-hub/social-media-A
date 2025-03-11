@@ -1,14 +1,11 @@
-// routes/conversations.js
 import express from "express";
-import { getConversation, createConversation , checkConversation} from "../controller/conversations.js";
+import { getConversation, createConversation, checkConversation } from "../controller/conversations.js";
 
 const router = express.Router();
 
-// Get conversations for a user
-router.get("/:userId", getConversation);
-// Add to routes/conversations.js
-router.get("/check/:senderId/:receiverId", checkConversation);
-// Create new conversation
-router.post("/", createConversation);
+// Routes
+router.get("/:conversationId", getConversation); // Get a specific conversation
+router.post("/", createConversation); // Create a new conversation
+router.get("/check/:userId1/:userId2", checkConversation); // Check if conversation exists
 
 export default router;

@@ -12,12 +12,9 @@ import relationshipRoute from './routes/relationship.js'
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import multer from "multer";
-import notificationRoute from './routes/notification.js'
+import notificationRoute from './routes/notification.js';
 import conversationsRoute from "./routes/conversation.js";
 import messagesRoute from "./routes/message.js";
-
-
-
 import storyRoutes from "./routes/stories.js"; // Correct Path
 
 app.use((req, res, next) => {
@@ -59,7 +56,7 @@ app.use("/api/posts",postRoutes)
 app.use("/api/likes",likeRoute)
 app.use("/api/relationships", relationshipRoute)
 app.use("/api/stories", storyRoutes);
-app.use("/api/conversation", conversationsRoute);
+app.use("/api/conversations", conversationsRoute);
 app.use("/api/message", messagesRoute);
 
 app.listen(8801, () => {
