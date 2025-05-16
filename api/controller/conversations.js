@@ -1,81 +1,181 @@
+// backend/controller/conversations.js
 import { db } from "../connect.js";
 
-// Get a specific conversation
-export const getConversation = async (req, res) => {
+// ✅ Find or create conversation between two users
+export const findOrCreateConversation = async (req, res) => {
+  const { userId1, userId2 } = req.params;
+
+  // Validate input
+  const parsedUserId1 = parseInt(userId1, 10);
+  const parsedUserId2 = parseInt(userId2, 10);
+
+  if (isNaN(parsedUserId1) || isNaN(parsedUserId2)) {
+    console.error("Invalid user IDs:", { userId1, userId2 });
+    return res.status(400).json({ message: "Invalid user IDs" });
+  }
+
   try {
-    const conversation = await db.query(
-      `SELECT c.*, u.id AS userId, u.username, u.profilePic 
-       FROM conversations c 
-       JOIN conversation_members cm ON c.id = cm.conversation_id
-       JOIN users u ON (cm.user_id != ? AND cm.user_id = u.id)
-       WHERE c.id = ?`,
-      [req.userId, req.params.conversationId]
+    // Check if users exist
+    const [users] = await db.promise().query(
+      `SELECT id FROM users WHERE id IN (?, ?)`,
+      [parsedUserId1, parsedUserId2]
     );
 
-    if (conversation.length > 0) {
-      res.status(200).json(conversation[0]);
-    } else {
-      res.status(404).json({ message: "Conversation not found" });
+    if (users.length !== 2) {
+      return res.status(400).json({ message: `Users not found: ${parsedUserId1, parsedUserId2}` });
     }
-  } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error retrieving conversation", error: err });
-  }
-};
 
-// Create a new conversation
-export const createConversation = async (req, res) => {
-  try {
-    const { senderId, receiverId } = req.body;
-
-    // Create the conversation
-    const result = await db.query(
-      "INSERT INTO conversations (created_at) VALUES (NOW())"
-    );
-    const conversationId = result.insertId;
-
-    // Add members to the conversation
-    await db.query(
-      "INSERT INTO conversation_members (conversation_id, user_id) VALUES (?, ?), (?, ?)",
-      [conversationId, senderId, conversationId, receiverId]
-    );
-
-    res
-      .status(200)
-      .json({ message: "Conversation created successfully", conversationId });
-  } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error creating conversation", error: err });
-  }
-};
-
-// Check if a conversation exists between two users
-export const checkConversation = async (req, res) => {
-  try {
-    const { userId1, userId2 } = req.params;
-    console.log("Params:", userId1, userId2);
-
-    const [rows] = await db.execute(
+    // Check for existing conversation
+    const [existing] = await db.promise().query(
       `SELECT c.id 
        FROM conversations c
        JOIN conversation_members cm1 ON c.id = cm1.conversation_id
        JOIN conversation_members cm2 ON c.id = cm2.conversation_id
-       WHERE cm1.user_id = ? AND cm2.user_id = ?
-       LIMIT 1`,
-      [userId1, userId2]
+       WHERE cm1.user_id = ? AND cm2.user_id = ? LIMIT 1`,
+      [parsedUserId1, parsedUserId2]
     );
 
-    console.log("Query Result:", rows);
-
-    if (rows.length > 0) {
-      return res.status(200).json({ exists: true, conversationId: rows[0].id });
-    } else {
-      return res.status(200).json({ exists: false });
+    if (existing.length > 0) {
+      return res.status(200).json({ conversationId: existing[0].id });
     }
+
+    // Create new conversation
+    const [insertResult] = await db.promise().query(
+      "INSERT INTO conversations (created_at) VALUES (NOW())"
+    );
+
+    const conversationId = insertResult.insertId;
+
+    // Add members to conversation
+    await db.promise().query(
+      `INSERT INTO conversation_members (conversation_id, user_id)
+       VALUES (?, ?), (?, ?)`,
+      [conversationId, parsedUserId1, conversationId, parsedUserId2]
+    );
+
+    res.status(200).json({ conversationId });
   } catch (err) {
-    console.error("Error checking conversation:", err);
-    return res.status(500).json({ message: "Error checking conversation", error: err.message });
+    console.error("Error in findOrCreateConversation:", err);
+    res.status(500).json({
+      message: "Error finding/creating conversation",
+      error: process.env.NODE_ENV === "development" ? err.stack : err.message,
+    });
+  }
+};
+
+// ✅ Get conversation with members
+export const getConversation = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+
+    // Ensure conversationId is a valid number
+    const parsedConversationId = parseInt(conversationId, 10);
+    if (isNaN(parsedConversationId)) {
+      return res.status(400).json({ message: "Invalid conversation ID" });
+    }
+
+    // Fetch conversation members
+    const [rows] = await db.promise().query(
+      `SELECT cm.user_id, u.username 
+       FROM conversation_members cm
+       JOIN users u ON cm.user_id = u.id
+       WHERE cm.conversation_id = ?`,
+      [parsedConversationId]
+    );
+
+    // Check if any rows were returned
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ message: "Conversation not found" });
+    }
+
+    res.status(200).json(rows);
+  } catch (err) {
+    console.error("Error in getConversation:", err);
+
+    // Log the error stack for debugging
+    if (process.env.NODE_ENV === "development") {
+      console.error(err.stack);
+    }
+
+    res.status(500).json({
+      message: "Error fetching conversation",
+      error: process.env.NODE_ENV === "development" ? err.stack : err.message,
+    });
+  }
+};
+
+// ✅ Get all conversations for a user
+export const getUserConversations = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    console.log("Fetching conversations for user:", userId);
+
+    // Ensure userId is a valid number
+    const parsedUserId = parseInt(userId, 10);
+    if (isNaN(parsedUserId)) {
+      console.error("Invalid user ID:", userId);
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    // Query to fetch conversations
+    const [queryResult] = await db.promise().query(
+      `
+      SELECT c.id AS conversation_id, cm.user_id, u.username
+      FROM conversations c
+      JOIN conversation_members cm ON c.id = cm.conversation_id
+      JOIN users u ON cm.user_id = u.id
+      WHERE c.id IN (
+        SELECT conversation_id 
+        FROM conversation_members 
+        WHERE user_id = ?
+      )
+      ORDER BY c.created_at DESC
+      `,
+      [parsedUserId]
+    );
+
+    // Log the raw query result for debugging
+    console.log("Query result:", queryResult);
+
+    // Check if any conversations were found
+    if (!queryResult || queryResult.length === 0) {
+      console.log("No conversations found for user:", userId);
+      return res.status(404).json({ message: "No conversations found" });
+    }
+
+    // Group conversations by conversation ID
+    const groupedConversations = queryResult.reduce((acc, row) => {
+      const existingConversation = acc.find(
+        (c) => c.conversation_id === row.conversation_id
+      );
+      if (existingConversation) {
+        existingConversation.members.push({
+          user_id: row.user_id,
+          username: row.username,
+        });
+      } else {
+        acc.push({
+          conversation_id: row.conversation_id,
+          members: [{ user_id: row.user_id, username: row.username }],
+        });
+      }
+      return acc;
+    }, []);
+
+    console.log("Conversations fetched successfully for user:", userId);
+    res.status(200).json(groupedConversations);
+  } catch (err) {
+    console.error("Error in getUserConversations:", err);
+
+    // Log the error stack for debugging
+    if (process.env.NODE_ENV === "development") {
+      console.error(err.stack);
+    }
+
+    res.status(500).json({
+      message: "Error fetching conversations",
+      error: process.env.NODE_ENV === "development" ? err.stack : err.message,
+    });
   }
 };
