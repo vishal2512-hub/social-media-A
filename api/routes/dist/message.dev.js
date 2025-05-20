@@ -16,5 +16,6 @@ var router = _express["default"].Router();
 
 router.get("/:conversationId", _messages.getMessages);
 router.post("/", _messages.sendMessage);
+router["delete"]("/:id", _messages.deleteMessage);
 var _default = router;
 exports["default"] = _default;

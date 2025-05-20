@@ -1,11 +1,9 @@
-// backend/controller/conversations.js
 import { db } from "../connect.js";
 
-// ✅ Find or create conversation between two users
+// Find or create a conversation between two users
 export const findOrCreateConversation = async (req, res) => {
-  const { userId1, userId2 } = req.params;
+  const { userId1, userId2 } = req.body;  // <-- Read from req.body now
 
-  // Validate input
   const parsedUserId1 = parseInt(userId1, 10);
   const parsedUserId2 = parseInt(userId2, 10);
 
@@ -15,17 +13,17 @@ export const findOrCreateConversation = async (req, res) => {
   }
 
   try {
-    // Check if users exist
+    // Check if both users exist
     const [users] = await db.promise().query(
       `SELECT id FROM users WHERE id IN (?, ?)`,
       [parsedUserId1, parsedUserId2]
     );
 
     if (users.length !== 2) {
-      return res.status(400).json({ message: `Users not found: ${parsedUserId1, parsedUserId2}` });
+      return res.status(400).json({ message: `Users not found: ${parsedUserId1}, ${parsedUserId2}` });
     }
 
-    // Check for existing conversation
+    // Check if conversation already exists
     const [existing] = await db.promise().query(
       `SELECT c.id 
        FROM conversations c
@@ -63,18 +61,16 @@ export const findOrCreateConversation = async (req, res) => {
   }
 };
 
-// ✅ Get conversation with members
+// Get conversation members by conversation ID
 export const getConversation = async (req, res) => {
   try {
     const { conversationId } = req.params;
 
-    // Ensure conversationId is a valid number
     const parsedConversationId = parseInt(conversationId, 10);
     if (isNaN(parsedConversationId)) {
       return res.status(400).json({ message: "Invalid conversation ID" });
     }
 
-    // Fetch conversation members
     const [rows] = await db.promise().query(
       `SELECT cm.user_id, u.username 
        FROM conversation_members cm
@@ -83,7 +79,6 @@ export const getConversation = async (req, res) => {
       [parsedConversationId]
     );
 
-    // Check if any rows were returned
     if (!rows || rows.length === 0) {
       return res.status(404).json({ message: "Conversation not found" });
     }
@@ -91,12 +86,6 @@ export const getConversation = async (req, res) => {
     res.status(200).json(rows);
   } catch (err) {
     console.error("Error in getConversation:", err);
-
-    // Log the error stack for debugging
-    if (process.env.NODE_ENV === "development") {
-      console.error(err.stack);
-    }
-
     res.status(500).json({
       message: "Error fetching conversation",
       error: process.env.NODE_ENV === "development" ? err.stack : err.message,
@@ -104,21 +93,17 @@ export const getConversation = async (req, res) => {
   }
 };
 
-// ✅ Get all conversations for a user
+// Get all conversations for a specific user
 export const getUserConversations = async (req, res) => {
   const { userId } = req.params;
 
   try {
-    console.log("Fetching conversations for user:", userId);
-
-    // Ensure userId is a valid number
     const parsedUserId = parseInt(userId, 10);
     if (isNaN(parsedUserId)) {
       console.error("Invalid user ID:", userId);
       return res.status(400).json({ message: "Invalid user ID" });
     }
 
-    // Query to fetch conversations
     const [queryResult] = await db.promise().query(
       `
       SELECT c.id AS conversation_id, cm.user_id, u.username
@@ -135,16 +120,11 @@ export const getUserConversations = async (req, res) => {
       [parsedUserId]
     );
 
-    // Log the raw query result for debugging
-    console.log("Query result:", queryResult);
-
-    // Check if any conversations were found
     if (!queryResult || queryResult.length === 0) {
-      console.log("No conversations found for user:", userId);
       return res.status(404).json({ message: "No conversations found" });
     }
 
-    // Group conversations by conversation ID
+    // Group members by conversation
     const groupedConversations = queryResult.reduce((acc, row) => {
       const existingConversation = acc.find(
         (c) => c.conversation_id === row.conversation_id
@@ -163,16 +143,9 @@ export const getUserConversations = async (req, res) => {
       return acc;
     }, []);
 
-    console.log("Conversations fetched successfully for user:", userId);
     res.status(200).json(groupedConversations);
   } catch (err) {
     console.error("Error in getUserConversations:", err);
-
-    // Log the error stack for debugging
-    if (process.env.NODE_ENV === "development") {
-      console.error(err.stack);
-    }
-
     res.status(500).json({
       message: "Error fetching conversations",
       error: process.env.NODE_ENV === "development" ? err.stack : err.message,

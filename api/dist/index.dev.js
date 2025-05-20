@@ -71,8 +71,7 @@ app.use("/api/likes", _likes["default"]);
 app.use("/api/relationships", _relationship["default"]);
 app.use("/api/stories", _stories["default"]);
 app.use("/api/conversations", _conversation["default"]);
-app.use("/api/messages", _message["default"]); // ✅ Fixed route path from "/api/message" to "/api/messages"
-
+app.use("/api/messages", _message["default"]);
 app.listen(8801, function () {
   console.log("API working");
 });

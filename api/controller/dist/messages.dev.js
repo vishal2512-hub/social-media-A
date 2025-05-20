@@ -3,9 +3,13 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.sendMessage = exports.getMessages = void 0;
+exports.deleteMessage = exports.sendMessage = exports.getMessages = void 0;
 
 var _connect = require("../connect.js");
+
+var _jsonwebtoken = _interopRequireDefault(require("jsonwebtoken"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
 
@@ -93,6 +97,26 @@ var sendMessage = function sendMessage(req, res) {
 
     res.status(200).json("Message sent successfully.");
   });
-};
+}; // ✅ Delete message
+
 
 exports.sendMessage = sendMessage;
+
+var deleteMessage = function deleteMessage(req, res) {
+  var messageId = req.params.id;
+  var token = req.cookies.accessToken;
+  if (!token) return res.status(401).json("Not logged in!"); // Only the sender can delete their own message
+
+  _jsonwebtoken["default"].verify(token, "secretkey", function (err, userInfo) {
+    if (err) return res.status(403).json("Token is not valid!");
+    var q = "DELETE FROM messages WHERE id = ? AND sender_id = ?";
+
+    _connect.db.query(q, [messageId, userInfo.id], function (err, data) {
+      if (err) return res.status(500).json("Failed to delete message");
+      if (data.affectedRows > 0) return res.status(200).json("Message deleted.");
+      return res.status(403).json("You can delete only your own message");
+    });
+  });
+};
+
+exports.deleteMessage = deleteMessage;

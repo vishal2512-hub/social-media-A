@@ -15,15 +15,15 @@ function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) ||
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-// ✅ Find or create conversation between two users
+// Find or create a conversation between two users
 var findOrCreateConversation = function findOrCreateConversation(req, res) {
-  var _req$params, userId1, userId2, parsedUserId1, parsedUserId2, _ref, _ref2, users, _ref3, _ref4, existing, _ref5, _ref6, insertResult, conversationId;
+  var _req$body, userId1, userId2, parsedUserId1, parsedUserId2, _ref, _ref2, users, _ref3, _ref4, existing, _ref5, _ref6, insertResult, conversationId;
 
   return regeneratorRuntime.async(function findOrCreateConversation$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
         case 0:
-          _req$params = req.params, userId1 = _req$params.userId1, userId2 = _req$params.userId2; // Validate input
+          _req$body = req.body, userId1 = _req$body.userId1, userId2 = _req$body.userId2; // <-- Read from req.body now
 
           parsedUserId1 = parseInt(userId1, 10);
           parsedUserId2 = parseInt(userId2, 10);
@@ -57,7 +57,7 @@ var findOrCreateConversation = function findOrCreateConversation(req, res) {
           }
 
           return _context.abrupt("return", res.status(400).json({
-            message: "Users not found: ".concat((parsedUserId1, parsedUserId2))
+            message: "Users not found: ".concat(parsedUserId1, ", ").concat(parsedUserId2)
           }));
 
         case 14:
@@ -113,7 +113,7 @@ var findOrCreateConversation = function findOrCreateConversation(req, res) {
       }
     }
   }, null, null, [[6, 32]]);
-}; // ✅ Get conversation with members
+}; // Get conversation members by conversation ID
 
 
 exports.findOrCreateConversation = findOrCreateConversation;
@@ -126,8 +126,7 @@ var getConversation = function getConversation(req, res) {
       switch (_context2.prev = _context2.next) {
         case 0:
           _context2.prev = 0;
-          conversationId = req.params.conversationId; // Ensure conversationId is a valid number
-
+          conversationId = req.params.conversationId;
           parsedConversationId = parseInt(conversationId, 10);
 
           if (!isNaN(parsedConversationId)) {
@@ -159,30 +158,25 @@ var getConversation = function getConversation(req, res) {
 
         case 12:
           res.status(200).json(rows);
-          _context2.next = 20;
+          _context2.next = 19;
           break;
 
         case 15:
           _context2.prev = 15;
           _context2.t0 = _context2["catch"](0);
-          console.error("Error in getConversation:", _context2.t0); // Log the error stack for debugging
-
-          if (process.env.NODE_ENV === "development") {
-            console.error(_context2.t0.stack);
-          }
-
+          console.error("Error in getConversation:", _context2.t0);
           res.status(500).json({
             message: "Error fetching conversation",
             error: process.env.NODE_ENV === "development" ? _context2.t0.stack : _context2.t0.message
           });
 
-        case 20:
+        case 19:
         case "end":
           return _context2.stop();
       }
     }
   }, null, null, [[0, 15]]);
-}; // ✅ Get all conversations for a user
+}; // Get all conversations for a specific user
 
 
 exports.getConversation = getConversation;
@@ -196,12 +190,10 @@ var getUserConversations = function getUserConversations(req, res) {
         case 0:
           userId = req.params.userId;
           _context3.prev = 1;
-          console.log("Fetching conversations for user:", userId); // Ensure userId is a valid number
-
           parsedUserId = parseInt(userId, 10);
 
           if (!isNaN(parsedUserId)) {
-            _context3.next = 7;
+            _context3.next = 6;
             break;
           }
 
@@ -210,29 +202,26 @@ var getUserConversations = function getUserConversations(req, res) {
             message: "Invalid user ID"
           }));
 
-        case 7:
-          _context3.next = 9;
+        case 6:
+          _context3.next = 8;
           return regeneratorRuntime.awrap(_connect.db.promise().query("\n      SELECT c.id AS conversation_id, cm.user_id, u.username\n      FROM conversations c\n      JOIN conversation_members cm ON c.id = cm.conversation_id\n      JOIN users u ON cm.user_id = u.id\n      WHERE c.id IN (\n        SELECT conversation_id \n        FROM conversation_members \n        WHERE user_id = ?\n      )\n      ORDER BY c.created_at DESC\n      ", [parsedUserId]));
 
-        case 9:
+        case 8:
           _ref9 = _context3.sent;
           _ref10 = _slicedToArray(_ref9, 1);
           queryResult = _ref10[0];
-          // Log the raw query result for debugging
-          console.log("Query result:", queryResult); // Check if any conversations were found
 
           if (!(!queryResult || queryResult.length === 0)) {
-            _context3.next = 16;
+            _context3.next = 13;
             break;
           }
 
-          console.log("No conversations found for user:", userId);
           return _context3.abrupt("return", res.status(404).json({
             message: "No conversations found"
           }));
 
-        case 16:
-          // Group conversations by conversation ID
+        case 13:
+          // Group members by conversation
           groupedConversations = queryResult.reduce(function (acc, row) {
             var existingConversation = acc.find(function (c) {
               return c.conversation_id === row.conversation_id;
@@ -255,31 +244,25 @@ var getUserConversations = function getUserConversations(req, res) {
 
             return acc;
           }, []);
-          console.log("Conversations fetched successfully for user:", userId);
           res.status(200).json(groupedConversations);
-          _context3.next = 26;
+          _context3.next = 21;
           break;
 
-        case 21:
-          _context3.prev = 21;
+        case 17:
+          _context3.prev = 17;
           _context3.t0 = _context3["catch"](1);
-          console.error("Error in getUserConversations:", _context3.t0); // Log the error stack for debugging
-
-          if (process.env.NODE_ENV === "development") {
-            console.error(_context3.t0.stack);
-          }
-
+          console.error("Error in getUserConversations:", _context3.t0);
           res.status(500).json({
             message: "Error fetching conversations",
             error: process.env.NODE_ENV === "development" ? _context3.t0.stack : _context3.t0.message
           });
 
-        case 26:
+        case 21:
         case "end":
           return _context3.stop();
       }
     }
-  }, null, null, [[1, 21]]);
+  }, null, null, [[1, 17]]);
 };
 
 exports.getUserConversations = getUserConversations;

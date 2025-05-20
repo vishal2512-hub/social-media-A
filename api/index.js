@@ -57,7 +57,7 @@ app.use("/api/likes",likeRoute)
 app.use("/api/relationships", relationshipRoute)
 app.use("/api/stories", storyRoutes);
 app.use("/api/conversations", conversationsRoute);
-app.use("/api/messages", messagesRoute); // ✅ Fixed route path from "/api/message" to "/api/messages"
+app.use("/api/messages", messagesRoute); 
 
 app.listen(8801, () => {
     console.log("API working");

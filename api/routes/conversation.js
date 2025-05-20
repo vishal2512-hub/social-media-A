@@ -1,4 +1,3 @@
-// backend/routes/conversation.js
 import express from "express";
 import {
   findOrCreateConversation,
@@ -8,13 +7,10 @@ import {
 
 const router = express.Router();
 
-// Route to find or create a conversation between two users
-router.get("/findOrCreate/:userId1/:userId2", findOrCreateConversation);
+router.post("/findOrCreate", findOrCreateConversation);
 
-// Route to get a specific conversation by ID
-router.get("/:conversationId", getConversation);
+router.get("/conversation/:conversationId", getConversation);
 
-// Route to get all conversations of a specific user
-router.get("/:userId", getUserConversations);
+router.get("/user/:userId", getUserConversations);
 
 export default router;

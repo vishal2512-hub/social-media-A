@@ -1,5 +1,6 @@
 // backend/controller/messages.js
 import { db } from "../connect.js";
+import jwt from "jsonwebtoken";
 
 // ✅ Get messages
 export const getMessages = async (req, res) => {
@@ -47,5 +48,23 @@ export const sendMessage = (req, res) => {
       return res.status(500).json("Error sending message.");
     }
     res.status(200).json("Message sent successfully.");
+  });
+};
+
+// ✅ Delete message
+export const deleteMessage = (req, res) => {
+  const messageId = req.params.id;
+  const token = req.cookies.accessToken;
+  if (!token) return res.status(401).json("Not logged in!");
+
+  // Only the sender can delete their own message
+  jwt.verify(token, "secretkey", (err, userInfo) => {
+    if (err) return res.status(403).json("Token is not valid!");
+    const q = "DELETE FROM messages WHERE id = ? AND sender_id = ?";
+    db.query(q, [messageId, userInfo.id], (err, data) => {
+      if (err) return res.status(500).json("Failed to delete message");
+      if (data.affectedRows > 0) return res.status(200).json("Message deleted.");
+      return res.status(403).json("You can delete only your own message");
+    });
   });
 };
